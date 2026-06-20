@@ -4,7 +4,7 @@ import pickle
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-st.set_page_config(page_title="Netflix Movie Recommender", layout="wide")
+st.set_page_config(page_title="Movie Recommender ", layout="wide")
 
 movies = pickle.load(open("movies.pkl", "rb"))
 api_key = st.secrets["OMDB_API_KEY"]
