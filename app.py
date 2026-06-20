@@ -1,83 +1,41 @@
 import streamlit as st
-import pickle
 import requests
+import pickle
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
-# ---------------- CONFIG ----------------
 st.set_page_config(page_title="Netflix Movie Recommender", layout="wide")
 
-movies = pickle.load(open('movies.pkl', 'rb'))
-similarity = pickle.load(open('similarity.pkl', 'rb'))
+movies = pickle.load(open("movies.pkl", "rb"))
 api_key = st.secrets["OMDB_API_KEY"]
 
-# ---------------- CSS ----------------
-st.markdown("""
-<style>
 
-body {
-    background-color: #141414;
-    color: white;
-}
+@st.cache_resource
+def create_similarity():
+    tfidf = TfidfVectorizer(max_features=5000, stop_words="english")
+    vectors = tfidf.fit_transform(movies["tags"])
+    similarity = cosine_similarity(vectors)
+    return similarity
 
-.main-title {
-    font-size: 45px;
-    font-weight: bold;
-    color: #E50914;
-    text-align: center;
-    margin-bottom: 10px;
-}
 
-.sub-title {
-    color: #bbb;
-    text-align: center;
-    margin-bottom: 20px;
-}
+similarity = create_similarity()
 
-.movie-card {
-    transition: 0.3s;
-    border-radius: 10px;
-}
 
-.movie-card:hover {
-    transform: scale(1.08);
-}
-
-.movie-title {
-    text-align: center;
-    font-size: 13px;
-    margin-top: 5px;
-    color: white;
-}
-
-.section-title {
-    font-size: 22px;
-    margin: 20px 0 10px 0;
-    color: #fff;
-}
-
-hr {
-    border: 1px solid #333;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# ---------------- HEADER ----------------
-st.markdown("<h1 class='main-title'> YOUR RECOMMENDED MOVIES 🎬</h1>", unsafe_allow_html=True)
-st.markdown("<p class='sub-title'>ML Powered Movie Recommendation System</p>", unsafe_allow_html=True)
-
-# ---------------- POSTER FETCH ----------------
 def fetch_poster(movie_name):
-    url = f"https://www.omdbapi.com/?t={movie_name}&apikey={api_key}"
-    data = requests.get(url).json()
+    try:
+        url = f"https://www.omdbapi.com/?t={movie_name}&apikey={api_key}"
+        data = requests.get(url).json()
 
-    if data.get("Poster") and data["Poster"] != "N/A":
-        return data["Poster"]
+        if data.get("Poster") and data["Poster"] != "N/A":
+            return data["Poster"]
+    except Exception:
+        pass
 
     return "https://via.placeholder.com/300x450?text=No+Image"
 
-# ---------------- RECOMMENDATION ----------------
+
 def recommend(movie):
-    movie_index = movies[movies['title'] == movie].index[0]
+    movie_index = movies[movies["title"] == movie].index[0]
 
     distances = similarity[movie_index]
 
@@ -97,11 +55,13 @@ def recommend(movie):
 
     return recommended_movies, recommended_posters
 
-# ---------------- MAIN SELECT ----------------
-selected_movie = st.selectbox("🔍 Search Movie", movies['title'].values)
 
-# ---------------- MAIN: RECOMMENDATIONS ----------------
-st.markdown("<h3 class='section-title'>🎯 Recommended for You</h3>", unsafe_allow_html=True)
+st.title("🎬 Movie Recommendation System")
+
+selected_movie = st.selectbox(
+    "Select a Movie",
+    movies["title"].values
+)
 
 recommended_movies, recommended_posters = recommend(selected_movie)
 
@@ -112,17 +72,5 @@ for i in range(5):
         st.image(recommended_posters[i], use_container_width=True)
         st.caption(recommended_movies[i])
 
-# ---------------- SIDEBAR: TRENDING ----------------
-with st.sidebar:
-    st.subheader("🔥 Trending Movies")
-
-    trending_movies = movies['title'].head(5).tolist()
-
-    for m in trending_movies:
-        poster = fetch_poster(m)
-        st.image(poster, use_container_width=True)
-        st.caption(m)
-
-# ---------------- FOOTER ----------------
 st.markdown("---")
-st.markdown("🚀 Built with ML + Streamlit By Bhargav😉.... ")
+st.markdown("🚀 Built with ML + Streamlit By Bhargav😉....")
