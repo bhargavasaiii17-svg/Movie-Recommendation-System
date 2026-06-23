@@ -103,7 +103,7 @@ Through this project, I gained practical experience in:
 
 GitHub: https://github.com/bhargavasaiii17-svg
 
-LinkedIn: Add your LinkedIn profile link here
+LinkedIn: https://www.linkedin.com/in/bhargava-sai-3a2b43349?utm_source=share_via&utm_content=profile&utm_medium=member_android
 
 ---
 
